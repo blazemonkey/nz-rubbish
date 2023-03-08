@@ -124,7 +124,7 @@ public class AucklandCollection : BaseCollection
             {
                 "rubbish" => CollectionType.Rubbish,
                 "recycle" => CollectionType.Recycling,
-                "food waste" => CollectionType.FoodScrapes,
+                "food scraps" => CollectionType.FoodScrapes,
                 _ => 0
             };
 
@@ -132,11 +132,19 @@ public class AucklandCollection : BaseCollection
                 continue;
 
             var description = n.NextSibling.NextSibling.InnerText;
+            // the description should start with Collection Day:
+            // if it doesn't, try next sibling one more time
+            if (description.StartsWith("Collection day") == false)
+                description = n.NextSibling.NextSibling.NextSibling.NextSibling.InnerText;
+
+            if (description.StartsWith("Collection day") == false)
+                description = string.Empty;
+
             var dateNodes = nextCollectionNodes.Where(x => x.InnerText.ToLower().Contains(typeText));
 
             foreach (var dn in dateNodes)
             {
-                var dateText = dn.InnerText.Replace("Rubbish", "").Replace("Recycle", "").Trim();
+                var dateText = dn.InnerText.Replace("Rubbish", "").Replace("Recycle", "").Replace("Food scraps", "").Trim();
                 if (string.IsNullOrEmpty(dateText))
                     continue;
 
