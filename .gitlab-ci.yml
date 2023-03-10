@@ -5,7 +5,7 @@ default:
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
 
-build-db:
+build-api:
   stage: build
   image: docker
   services: 
