@@ -8,7 +8,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["NZRubbishCollection.Api/NZRubbishCollection.Api.csproj", "NZRubbishCollection.Api/"]
-COPY ["NZRubbishCollection.Api/NZRubbishCollection.Shared.csproj", "NZRubbishCollection.Shared/"]
+COPY ["NZRubbishCollection.Shared/NZRubbishCollection.Shared.csproj", "NZRubbishCollection.Shared/"]
 RUN dotnet restore "NZRubbishCollection.Api/NZRubbishCollection.Api.csproj"
 COPY . .
 WORKDIR "/src/NZRubbishCollection.Api"
