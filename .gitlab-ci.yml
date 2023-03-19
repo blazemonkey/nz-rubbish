@@ -1,0 +1,15 @@
+stages:
+  - build
+
+default:
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+
+build-api:
+  stage: build
+  image: docker
+  services: 
+    - docker:dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE -f NZRubbishCollection.Api/Dockerfile .
+    - docker push $CI_REGISTRY_IMAGE
