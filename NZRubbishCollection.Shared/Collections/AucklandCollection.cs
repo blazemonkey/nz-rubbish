@@ -1,12 +1,10 @@
 ﻿using HtmlAgilityPack;
 using NZRubbishCollection.Shared.Enums;
 using NZRubbishCollection.Shared.Models;
-using System;
+using NZRubbishCollection.Shared.Services.ScrapingService;
 using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NZRubbishCollection.Shared.Collections;
 
@@ -49,7 +47,8 @@ public class AucklandCollection : BaseCollection
     /// Constructor of the class
     /// </summary>
     /// <param name="httpClient">HttpClient that will be used to grab the data from the pages</param>
-    public AucklandCollection(HttpClient httpClient) : base(httpClient) { }
+    /// <param name="scrapingService">Service used for web scraping</param>
+    public AucklandCollection(HttpClient httpClient, IScrapingService scrapingService) : base(httpClient, scrapingService) { }
 
     /// <summary>
     /// Get the collection details for the street address and council region
@@ -67,7 +66,7 @@ public class AucklandCollection : BaseCollection
         var doc = GetDocument(CollectionUrl);
         var streetName = GetStreetName(doc);
         if (string.IsNullOrEmpty(streetName))
-            return new CollectionResponse() { Error = "Could not find a street name for the collection page" };
+            return new CollectionResponse() { Error = "No collection details found for this street" };
 
         response.StreetAddress = streetName;
         response.SourceUrl = CollectionUrl;
@@ -124,7 +123,7 @@ public class AucklandCollection : BaseCollection
             {
                 "rubbish" => CollectionType.Rubbish,
                 "recycle" => CollectionType.Recycling,
-                "food scraps" => CollectionType.FoodScrapes,
+                "food scraps" => CollectionType.FoodScraps,
                 _ => 0
             };
 

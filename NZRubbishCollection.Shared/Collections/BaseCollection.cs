@@ -1,7 +1,9 @@
 ﻿using HtmlAgilityPack;
 using NZRubbishCollection.Shared.Enums;
 using NZRubbishCollection.Shared.Models;
+using NZRubbishCollection.Shared.Services.ScrapingService;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace NZRubbishCollection.Shared.Collections;
 
@@ -14,6 +16,11 @@ public abstract class BaseCollection
     /// Gets or sets the HttpClient that will be used to grab the data from the pages
     /// </summary>
     protected HttpClient HttpClient { get; set; }
+
+    /// <summary>
+    /// Gets or sets the service used for web scraping
+    /// </summary>
+    protected IScrapingService ScrapingService { get; set; }
 
     /// <summary>
     /// Gets the name of the Council
@@ -34,9 +41,11 @@ public abstract class BaseCollection
     /// Constructor of the class
     /// </summary>
     /// <param name="httpClient">HttpClient that will be used to grab the data from the pages</param>
-    public BaseCollection(HttpClient httpClient)
+    /// <param name="scrapingService">Service used for web scraping</param>
+    public BaseCollection(HttpClient httpClient, IScrapingService scrapingService)
     {
         HttpClient = httpClient;
+        ScrapingService = scrapingService;
     }
 
     /// <summary>
@@ -80,9 +89,39 @@ public abstract class BaseCollection
     /// <returns>An HtmlDocument</returns>
     protected HtmlDocument GetDocument(string url)
     {
-        var web = new HtmlWeb();
-        var doc = web.Load(url);
+        return ScrapingService.GetHtmlDocument(url);
+    }
 
-        return doc;
+    /// <summary>
+    /// Get the Council instance class based on either a council enum or the full council name
+    /// </summary>
+    /// <param name="council">Either the Enum of the Council as a string or the full name of the Council</param>
+    /// <param name="httpClient">HttpClient that will be used to grab the data from the pages</param>
+    /// <param name="scrapingService">Service used for web scraping</param>
+    /// <returns>A concrete instance of BaseCollection</returns>
+    public static BaseCollection? GetCouncilCollection(string council, HttpClient httpClient, IScrapingService scrapingService)
+    {
+        var types = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsSubclassOf(typeof(BaseCollection)) && x.IsAbstract == false).ToArray();
+        foreach (var t in types)
+        {
+            var instance = Activator.CreateInstance(t, httpClient, scrapingService) as BaseCollection;
+            if (instance == null)
+                continue;
+
+            // the Environmental Variable can pass either the Enum or full string of the Council
+            var isCouncilEnum = int.TryParse(council.ToString(), out int councilEnum);
+            if (isCouncilEnum)
+            {
+                if (instance.CouncilType == (Council)councilEnum)
+                    return instance;
+            }
+            else
+            {
+                if (instance.CouncilName.ToLower() == council.ToLower())
+                    return instance;
+            }
+        }
+
+        return null;
     }
 }

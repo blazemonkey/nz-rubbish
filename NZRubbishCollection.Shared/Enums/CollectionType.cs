@@ -14,7 +14,7 @@ public enum CollectionType
     /// </summary>
     Recycling = 2,
     /// <summary>
-    /// Food Scrapes Collection
+    /// Food Scraps Collection
     /// </summary>
-    FoodScrapes = 3
+    FoodScraps = 3
 }
