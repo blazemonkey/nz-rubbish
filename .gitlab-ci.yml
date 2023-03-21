@@ -1,9 +1,18 @@
 stages:
+  - test
   - build
 
 default:
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+
+test:
+  stage: test
+  image: docker
+  services:
+    - docker:dind
+    - docker build -t nz-rubbish-tests -f NZRubbishCollection.Tests/Dockerfile .
+    - docker run nz-rubbish-tests
 
 build-api:
   stage: build
