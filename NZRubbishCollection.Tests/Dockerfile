@@ -7,17 +7,12 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["NZRubbishCollection.Api/NZRubbishCollection.Api.csproj", "NZRubbishCollection.Api/"]
+COPY ["NZRubbishCollection.Tests/NZRubbishCollection.Tests.csproj", "NZRubbishCollection.Tests/"]
 COPY ["NZRubbishCollection.Shared/NZRubbishCollection.Shared.csproj", "NZRubbishCollection.Shared/"]
-RUN dotnet restore "NZRubbishCollection.Api/NZRubbishCollection.Api.csproj"
+RUN dotnet restore "NZRubbishCollection.Tests/NZRubbishCollection.Tests.csproj"
 COPY . .
-WORKDIR "/src/NZRubbishCollection.Api"
-RUN dotnet build "NZRubbishCollection.Api.csproj" -c Release -o /app/build
+WORKDIR "/src/NZRubbishCollection.Tests"
+RUN dotnet build "NZRubbishCollection.Tests.csproj" -c Release -o /app/build
 
-FROM build AS publish
-RUN dotnet publish "NZRubbishCollection.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "NZRubbishCollection.Api.dll"]
+FROM build AS test
+RUN dotnet test --filter FullyQualifiedName~NZRubbishCollection.Tests.Tests.MockTests
