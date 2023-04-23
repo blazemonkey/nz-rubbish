@@ -10,12 +10,12 @@ public class Globals
     /// <summary>
     /// Gets or sets the council
     /// </summary>
-    public static string Council { get; set; }
+    public static string? Council { get; set; }
     
     /// <summary>
     /// Gets or sets the street address
     /// </summary>
-    public static string StreetAddress { get; set; }
+    public static string? StreetAddress { get; set; }
 
     /// <summary>
     /// Gets or sets the collection types to include in data
