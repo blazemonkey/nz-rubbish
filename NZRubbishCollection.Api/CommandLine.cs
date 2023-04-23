@@ -1,3 +1,5 @@
+using NZRubbishCollection.Shared.Enums;
+
 namespace NZRubbishCollection.Api;
 
 /// <summary>
@@ -13,20 +15,22 @@ public class CommandLine
     {
         Globals.Council = Environment.GetEnvironmentVariable("Council");
         Globals.StreetAddress = Environment.GetEnvironmentVariable("StreetAddress");
+        if (int.TryParse(Environment.GetEnvironmentVariable("Types") ?? string.Empty, out int iCollectionTypes))
+            Globals.CollectionTypes = (CollectionType)iCollectionTypes;
+        
         if (args?.Any() != true)
             return;
-        for (int i = 0; i < args.Length - 2; i++)
+        for (int i = 0; i < args.Length - 1; i++)
         {
             var arg = args[i].ToLowerInvariant();
             if (arg == "--council")
-            {
-                Globals.Council = args[i + 1];
-                i++;
-            }
+                Globals.Council = args[++i];
             else if (arg == "--street")
+                Globals.StreetAddress = args[++i];
+            else if (arg == "--types")
             {
-                Globals.StreetAddress = args[i + 1];
-                i++;
+                if(int.TryParse(args[++i], out int iTypes))
+                    Globals.CollectionTypes = (CollectionType)iTypes;
             }
         }
     }

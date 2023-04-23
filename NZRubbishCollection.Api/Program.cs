@@ -2,9 +2,9 @@ using NZRubbishCollection.Api;
 using NZRubbishCollection.Shared.Services.ScrapingService;
 
 #if(DEBUG)
-args = new[] { "--street", "", "--council", "Auckland City Council" };
+// uncomment this for testing
+// args = new[] { "--types", "3", "--council", "Auckland City Council", "--street", "" };
 #endif
-
 // parse the command line arguments
 CommandLine.Parse(args);
 

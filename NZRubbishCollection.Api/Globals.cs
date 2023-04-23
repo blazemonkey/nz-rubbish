@@ -1,3 +1,5 @@
+using NZRubbishCollection.Shared.Enums;
+
 namespace NZRubbishCollection.Api;
 
 /// <summary>
@@ -14,31 +16,10 @@ public class Globals
     /// Gets or sets the street address
     /// </summary>
     public static string StreetAddress { get; set; }
-    
-    
-    private static HttpClient _HttpClient;
 
     /// <summary>
-    /// Gets or sets the HttpClient. This is not mocked because Integration tests will make actual HTTP calls
+    /// Gets or sets the collection types to include in data
     /// </summary>
-    public static HttpClient HttpClient
-    {
-        get
-        {
-            if (_HttpClient == null)
-            {
-                var handler = new HttpClientHandler
-                {
-                    SslProtocols = System.Security.Authentication.SslProtocols.Tls | System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls12,
-                    ServerCertificateCustomValidationCallback = (_, _, _, _)
-                        => true
-                };
-
-                _HttpClient = new(handler);
-            }
-
-            return _HttpClient;
-        }
-        set => _HttpClient = value;
-    } 
+    public static CollectionType CollectionTypes { get; set; } =
+        CollectionType.Recycling | CollectionType.Rubbish | CollectionType.FoodScraps;
 }
