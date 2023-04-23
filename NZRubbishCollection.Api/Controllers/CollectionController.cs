@@ -13,11 +13,6 @@ namespace NZRubbishCollection.Api.Controllers;
 public class CollectionController : ControllerBase
 {
     /// <summary>
-    /// Gets or sets the HttpClient that will be used to grab the data from the pages
-    /// </summary>
-    public HttpClient HttpClient { get; init; }
-
-    /// <summary>
     /// Gets or sets the service used for web scraping
     /// </summary>
     protected IScrapingService ScrapingService { get; set; }
@@ -30,12 +25,10 @@ public class CollectionController : ControllerBase
     /// <summary>
     /// Constructor of the Controller
     /// </summary>
-    /// <param name="httpClient">HttpClient that will be used to grab the data from the pages</param>
     /// <param name="scrapingService">Service used for web scraping</param>
     /// <param name="configuration">Used for getting configurations set</param>
-    public CollectionController(HttpClient httpClient, IScrapingService scrapingService, IConfiguration configuration)
+    public CollectionController(IScrapingService scrapingService, IConfiguration configuration)
     {
-        HttpClient = httpClient;
         ScrapingService = scrapingService;
         Configuration = configuration;
     }
@@ -47,12 +40,12 @@ public class CollectionController : ControllerBase
     [HttpGet]
     public async Task<CollectionResponse> Get()
     {
-        var council = Configuration["Council"];
-        var streetAddress = Configuration["StreetAddress"];
+        var council = Globals.Council?.EmptyAsNull() ?? Configuration["Council"];
+        var streetAddress = Globals.StreetAddress?.EmptyAsNull() ?? Configuration["StreetAddress"];
         if (string.IsNullOrEmpty(council) || string.IsNullOrEmpty(streetAddress))
             return new CollectionResponse() { Error = "Both 'Council' and 'StreetAddress' must be set in Environmental Variables to use this endpoint." };
 
-        var instance = BaseCollection.GetCouncilCollection(council, HttpClient, ScrapingService);
+        var instance = BaseCollection.GetCouncilCollection(council, Globals.HttpClient, ScrapingService);
         if (instance == null)
             return new CollectionResponse() { Error = "Incorrect Council name or enum used." };
 
