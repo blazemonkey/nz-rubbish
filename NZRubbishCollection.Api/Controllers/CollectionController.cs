@@ -5,6 +5,7 @@ using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using NZRubbishCollection.Shared.Collections;
+using NZRubbishCollection.Shared.Helpers;
 using NZRubbishCollection.Shared.Models;
 using NZRubbishCollection.Shared.Services.ScrapingService;
 
@@ -75,14 +76,18 @@ public class CollectionController : ControllerBase
     {
         var calendar = new Calendar();
 
+        var council = Globals.Council?.EmptyAsNull() ?? Configuration["Council"] ?? string.Empty;
+        var streetAddress = Globals.StreetAddress?.EmptyAsNull() ?? Configuration["StreetAddress"] ?? string.Empty;
         var collection = await this.Get();
         foreach (var item in collection.Details ?? new CollectionDetail[] {})
         {
             if ((Globals.CollectionTypes & item.Type) != item.Type)
                 continue; // we don't want this type
-            
+
             CalendarEvent evt = new()
             {
+                Uid = HashHelper.Md5Hash(council + "-" + streetAddress + "-" + item.Type + "-" +
+                                         item.Date.ToString("yyyyMMdd")),
                 Summary = item.Type.Humanize(),
                 Description = item.Description ?? item.Type.Humanize(),
                 DtStart = new CalDateTime(item.Date),
