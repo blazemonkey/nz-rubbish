@@ -1,4 +1,12 @@
+using NZRubbishCollection.Api;
 using NZRubbishCollection.Shared.Services.ScrapingService;
+
+#if(DEBUG)
+// uncomment this for testing
+// args = new[] { "--types", "3", "--council", "Auckland City Council", "--street", "" };
+#endif
+// parse the command line arguments
+CommandLine.Parse(args);
 
 var builder = WebApplication.CreateBuilder(args);
 

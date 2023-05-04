@@ -1,5 +1,11 @@
+using Humanizer;
+using Ical.Net;
+using Ical.Net.CalendarComponents;
+using Ical.Net.DataTypes;
+using Ical.Net.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using NZRubbishCollection.Shared.Collections;
+using NZRubbishCollection.Shared.Helpers;
 using NZRubbishCollection.Shared.Models;
 using NZRubbishCollection.Shared.Services.ScrapingService;
 
@@ -16,7 +22,7 @@ public class CollectionController : ControllerBase
     /// Gets or sets the HttpClient that will be used to grab the data from the pages
     /// </summary>
     public HttpClient HttpClient { get; init; }
-
+    
     /// <summary>
     /// Gets or sets the service used for web scraping
     /// </summary>
@@ -47,8 +53,8 @@ public class CollectionController : ControllerBase
     [HttpGet]
     public async Task<CollectionResponse> Get()
     {
-        var council = Configuration["Council"];
-        var streetAddress = Configuration["StreetAddress"];
+        var council = Globals.Council?.EmptyAsNull() ?? Configuration["Council"];
+        var streetAddress = Globals.StreetAddress?.EmptyAsNull() ?? Configuration["StreetAddress"];
         if (string.IsNullOrEmpty(council) || string.IsNullOrEmpty(streetAddress))
             return new CollectionResponse() { Error = "Both 'Council' and 'StreetAddress' must be set in Environmental Variables to use this endpoint." };
 
@@ -57,6 +63,43 @@ public class CollectionController : ControllerBase
             return new CollectionResponse() { Error = "Incorrect Council name or enum used." };
 
         var response = await instance.GetCollection(streetAddress);
+        
         return response;
+    }
+
+    /// <summary>
+    /// Gets an iCal feed 
+    /// </summary>
+    /// <returns>the result of this get</returns>
+    [HttpGet("ical")]
+    public async Task<IActionResult> Ical()
+    {
+        var calendar = new Calendar();
+
+        var council = Globals.Council?.EmptyAsNull() ?? Configuration["Council"] ?? string.Empty;
+        var streetAddress = Globals.StreetAddress?.EmptyAsNull() ?? Configuration["StreetAddress"] ?? string.Empty;
+        var collection = await this.Get();
+        foreach (var item in collection.Details ?? new CollectionDetail[] {})
+        {
+            if ((Globals.CollectionTypes & item.Type) != item.Type)
+                continue; // we don't want this type
+
+            CalendarEvent evt = new()
+            {
+                Uid = HashHelper.Md5Hash(council + "-" + streetAddress + "-" + item.Type + "-" +
+                                         item.Date.ToString("yyyyMMdd")),
+                Summary = item.Type.Humanize(),
+                Description = item.Description ?? item.Type.Humanize(),
+                DtStart = new CalDateTime(item.Date),
+                DtEnd = new CalDateTime(item.Date.AddDays(1))
+            };
+
+            calendar.Events.Add(evt);
+        }
+
+        var serializer = new CalendarSerializer();
+        var serializedCalendar = serializer.SerializeToString(calendar);
+
+        return Content(serializedCalendar, "text/calendar");
     }
 }

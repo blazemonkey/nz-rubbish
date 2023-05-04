@@ -3,6 +3,7 @@
 /// <summary>
 /// Type of the Collection
 /// </summary>
+[Flags]
 public enum CollectionType
 {
     /// <summary>
@@ -10,11 +11,11 @@ public enum CollectionType
     /// </summary>
     Rubbish = 1,
     /// <summary>
-    /// Recyling Collection
+    /// Recycling Collection
     /// </summary>
     Recycling = 2,
     /// <summary>
     /// Food Scraps Collection
     /// </summary>
-    FoodScraps = 3
+    FoodScraps = 4
 }
