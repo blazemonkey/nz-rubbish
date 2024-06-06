@@ -112,11 +112,10 @@ public class AucklandCollection : BaseCollection
     {
         var dates = new List<CollectionDetail>();
 
-        var nodes = doc.DocumentNode.Descendants("h4").Where(x => x.ParentNode.InnerText.Contains("Household collection"));
-        var nextCollectionNodes = doc.DocumentNode.Descendants("span").Where(x => x.HasClass("m-r-1") &&
-                        x.ParentNode.ParentNode.Id.Contains("HouseholdBlock")).Select(x => x.ParentNode);
+        var nextCollectionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h3[@class='card-title h2' and text()='Household collection']]//h5[@class='collectionDayDate']");
+        var descriptionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h3[@class='card-title h2' and text()='Household collection']]/following-sibling::div//h4");
 
-        foreach (var n in nodes)
+        foreach (var n in nextCollectionNodes)
         {
             var typeText = n.ChildNodes.FirstOrDefault()?.InnerText?.ToLower()?.Trim() ?? string.Empty;
             CollectionType type = typeText switch
@@ -130,34 +129,31 @@ public class AucklandCollection : BaseCollection
             if (type == 0)
                 continue;
 
-            var description = n.NextSibling.NextSibling.InnerText;
-            // the description should start with Collection Day:
-            // if it doesn't, try next sibling one more time
-            if (description.StartsWith("Collection day") == false)
-                description = n.NextSibling.NextSibling.NextSibling.NextSibling.InnerText;
+            var dateText = n.ChildNodes.LastOrDefault()?.InnerText?.Trim() ?? string.Empty;
+            var date = ParseCollectionDate(dateText, DateTime.Now.Year);
 
-            if (description.StartsWith("Collection day") == false)
-                description = string.Empty;
-
-            var dateNodes = nextCollectionNodes.Where(x => x.InnerText.ToLower().Contains(typeText));
-
-            foreach (var dn in dateNodes)
+            var description = "";
+            var descriptionNode = descriptionNodes.FirstOrDefault(x => x.FirstChild?.InnerText?.ToLower()?.Trim() == typeText);
+            if (descriptionNode != null)
             {
-                var dateText = dn.InnerText.Replace("Rubbish", "").Replace("Recycle", "").Replace("Food scraps", "").Trim();
-                if (string.IsNullOrEmpty(dateText))
-                    continue;
+                description = descriptionNode.NextSibling.NextSibling.InnerText;
+                // the description should start with Collection Day:
+                // if it doesn't, try next sibling one more time
+                if (description.StartsWith("Collection day") == false)
+                    description = descriptionNode.NextSibling.NextSibling.NextSibling.NextSibling.InnerText;
 
-                var date = ParseCollectionDate(dateText, DateTime.Now.Year);
-
-                var detail = new CollectionDetail()
-                {
-                    Type = type,
-                    Description = description,
-                    Date = date,
-                };
-
-                dates.Add(detail);
+                if (description.StartsWith("Collection day") == false)
+                    description = string.Empty;
             }
+
+            var detail = new CollectionDetail()
+            {
+                Type = type,
+                Description = description,
+                Date = date,
+            };
+
+            dates.Add(detail);
         }
 
         return dates.ToArray();
