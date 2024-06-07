@@ -23,10 +23,10 @@ public class AucklandTests : BaseIntegrationTests
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
         Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12343873601", result.SourceUrl);
-        Assert.AreEqual("10 Popokatea Drive, Takanini", result.StreetAddress);
-        Assert.AreEqual(5, result.Details?.Length);
-        Assert.AreEqual(2, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
-        Assert.AreEqual(2, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
+        Assert.AreEqual("10 Popokatea Drive, Takanini", result.StreetAddress?.Trim());
+        Assert.AreEqual(3, result.Details?.Length);
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
     }
 
@@ -39,10 +39,10 @@ public class AucklandTests : BaseIntegrationTests
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
         Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345874265", result.SourceUrl);
-        Assert.AreEqual("2 Surf View Crescent, Red Beach", result.StreetAddress);
-        Assert.AreEqual(1, result.Details?.Length);
+        Assert.AreEqual("2 Surf View Crescent, Red Beach", result.StreetAddress?.Trim());
+        Assert.AreEqual(2, result.Details?.Length);
         Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
-        Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
     }
 
@@ -50,14 +50,14 @@ public class AucklandTests : BaseIntegrationTests
     public async Task HasRubbishAndRecyclingTest()
     {
         var collection = GetBaseCollection();
-        var result = await collection.GetCollection("2 West End Road");
+        var result = await collection.GetCollection("Clevedon-Takanini Road, Clevedon");
 
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
-        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12342423734", result.SourceUrl);
-        Assert.AreEqual("2 West End Road, Herne Bay", result.StreetAddress);
-        Assert.AreEqual(3, result.Details?.Length);
-        Assert.AreEqual(2, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
+        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345049582", result.SourceUrl);
+        Assert.AreEqual("Clevedon-Takanini Road, Clevedon", result.StreetAddress?.Trim());
+        Assert.AreEqual(2, result.Details?.Length);
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
         Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
     }

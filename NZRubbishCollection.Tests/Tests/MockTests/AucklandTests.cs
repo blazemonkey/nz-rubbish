@@ -26,10 +26,10 @@ public class AucklandTests : BaseMockTests
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
         Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12343873601", result.SourceUrl);
-        Assert.AreEqual("10 Popokatea Drive, Takanini", result.StreetAddress);
-        Assert.AreEqual(5, result.Details?.Length);
-        Assert.AreEqual(2, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
-        Assert.AreEqual(2, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
+        Assert.AreEqual("10 Popokatea Drive, Takanini", result.StreetAddress?.Trim());
+        Assert.AreEqual(3, result.Details?.Length);
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
     }
 
@@ -45,28 +45,28 @@ public class AucklandTests : BaseMockTests
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
         Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345874265", result.SourceUrl);
-        Assert.AreEqual("2 Surf View Crescent, Red Beach", result.StreetAddress);
-        Assert.AreEqual(1, result.Details?.Length);
+        Assert.AreEqual("2 Surf View Crescent, Red Beach", result.StreetAddress?.Trim());
+        Assert.AreEqual(2, result.Details?.Length);
         Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
-        Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
     }
 
     [TestMethod]
     public async Task HasRubbishAndRecyclingTest()
     {
-        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[{\"ACRateAccountKey\":\"12342423734\",\"Address\":\"2 West End Road, Herne Bay\",\"Suggestion\":\"2 West End Road, Herne Bay\"}]" };
-        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = $"https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12342423734", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasRubbishAndRecyclingTest)}") };
+        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[{\"ACRateAccountKey\":\"12345049582\",\"Address\":\"Clevedon-Takanini Road, Clevedon\",\"Suggestion\":\"Clevedon-Takanini Road, Clevedon\"}]" };
+        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = $"https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345049582", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasRubbishAndRecyclingTest)}") };
 
         var collection = GetBaseCollection(new MockHttpParameter[] { httpParameter }, new MockHtmlDocument[] { htmlDocumentParameter });
-        var result = await collection.GetCollection("2 West End Road");
+        var result = await collection.GetCollection("Clevedon-Takanini Road, Clevedon");
 
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
-        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12342423734", result.SourceUrl);
-        Assert.AreEqual("2 West End Road, Herne Bay", result.StreetAddress);
-        Assert.AreEqual(3, result.Details?.Length);
-        Assert.AreEqual(2, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
+        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345049582", result.SourceUrl);
+        Assert.AreEqual("Clevedon-Takanini Road, Clevedon", result.StreetAddress?.Trim());
+        Assert.AreEqual(2, result.Details?.Length);
+        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
         Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
     }

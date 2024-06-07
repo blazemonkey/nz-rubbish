@@ -72,6 +72,9 @@ public class AucklandCollection : BaseCollection
         response.SourceUrl = CollectionUrl;
 
         var dates = GetCollectionDates(doc);
+        if (dates.Any() == false)
+            return new CollectionResponse() { Error = "No collection details found for this street" };
+
         response.Details = dates;
 
         return response;
@@ -115,9 +118,12 @@ public class AucklandCollection : BaseCollection
         var nextCollectionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h3[@class='card-title h2' and text()='Household collection']]//h5[@class='collectionDayDate']");
         var descriptionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h3[@class='card-title h2' and text()='Household collection']]/following-sibling::div//h4");
 
+        if (nextCollectionNodes == null || descriptionNodes == null)
+            return dates.ToArray();
+
         foreach (var n in nextCollectionNodes)
         {
-            var typeText = n.ChildNodes.FirstOrDefault()?.InnerText?.ToLower()?.Trim() ?? string.Empty;
+            var typeText = n.SelectSingleNode("span")?.InnerText?.ToLower()?.Trim() ?? string.Empty;
             CollectionType type = typeText switch
             {
                 "rubbish" => CollectionType.Rubbish,
@@ -129,7 +135,7 @@ public class AucklandCollection : BaseCollection
             if (type == 0)
                 continue;
 
-            var dateText = n.ChildNodes.LastOrDefault()?.InnerText?.Trim() ?? string.Empty;
+            var dateText = n.SelectSingleNode("strong")?.InnerText?.Trim() ?? string.Empty;
             var date = ParseCollectionDate(dateText, DateTime.Now.Year);
 
             var description = "";
