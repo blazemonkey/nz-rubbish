@@ -5,6 +5,7 @@ using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using NZRubbishCollection.Shared.Collections;
+using NZRubbishCollection.Shared.Enums;
 using NZRubbishCollection.Shared.Helpers;
 using NZRubbishCollection.Shared.Models;
 using NZRubbishCollection.Shared.Services.ScrapingService;
@@ -58,12 +59,36 @@ public class CollectionController : ControllerBase
         if (string.IsNullOrEmpty(council) || string.IsNullOrEmpty(streetAddress))
             return new CollectionResponse() { Error = "Both 'Council' and 'StreetAddress' must be set in Environmental Variables to use this endpoint." };
 
+        var response = await GetCollection(council, streetAddress);
+        return response;
+    }
+
+    /// <summary>
+    /// Endpoint to use a specific council and street address
+    /// </summary>
+    /// <param name="councilType">Council of the collection location</param>
+    /// <param name="streetAddress">Street address</param>
+    /// <returns>CollectionResponse with collection details</returns>
+    [HttpGet("{councilType}/{streetAddress}")]
+    public async Task<CollectionResponse> Get(int councilType, string streetAddress)
+    {
+        var response = await GetCollection(councilType.ToString(), streetAddress);
+        return response;
+    }
+
+    /// <summary>
+    /// Gets the collection dates
+    /// </summary>
+    /// <param name="council">Council of the collection location</param>
+    /// <param name="streetAddress">Street address</param>
+    /// <returns>Response containing collection details</returns>
+    private async Task<CollectionResponse> GetCollection(string council, string streetAddress)
+    {
         var instance = BaseCollection.GetCouncilCollection(council, HttpClient, ScrapingService);
         if (instance == null)
             return new CollectionResponse() { Error = "Incorrect Council name or enum used." };
 
         var response = await instance.GetCollection(streetAddress);
-        
         return response;
     }
 
