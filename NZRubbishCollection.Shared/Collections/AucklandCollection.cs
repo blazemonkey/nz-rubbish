@@ -115,15 +115,15 @@ public class AucklandCollection : BaseCollection
     {
         var dates = new List<CollectionDetail>();
 
-        var nextCollectionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h3[@class='card-title h2' and text()='Household collection']]//h5[@class='collectionDayDate']");
-        var descriptionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h3[@class='card-title h2' and text()='Household collection']]/following-sibling::div//h4");
+        var nextCollectionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h4[@class='card-title h2' and text()='Household collection']]//h5[@class='collectionDayDate']");
+        var descriptionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h4[@class='card-title h2' and text()='Household collection']]/following-sibling::div/div/h6");
 
         if (nextCollectionNodes == null || descriptionNodes == null)
             return dates.ToArray();
 
         foreach (var n in nextCollectionNodes)
         {
-            var typeText = n.SelectSingleNode("span")?.InnerText?.ToLower()?.Trim() ?? string.Empty;
+            var typeText = n.InnerText?.Trim()?.Split("\r\n")[0]?.Replace(":", "")?.ToLower() ?? string.Empty;
             CollectionType type = typeText switch
             {
                 "rubbish" => CollectionType.Rubbish,
@@ -139,7 +139,7 @@ public class AucklandCollection : BaseCollection
             var date = ParseCollectionDate(dateText, DateTime.Now.Year);
 
             var description = "";
-            var descriptionNode = descriptionNodes.FirstOrDefault(x => x.FirstChild?.InnerText?.ToLower()?.Trim() == typeText);
+            var descriptionNode = descriptionNodes.FirstOrDefault(x => x?.InnerText?.ToLower()?.Trim() == typeText);
             if (descriptionNode != null)
             {
                 description = descriptionNode.NextSibling.NextSibling.InnerText;
