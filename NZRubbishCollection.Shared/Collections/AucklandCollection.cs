@@ -127,7 +127,7 @@ public class AucklandCollection : BaseCollection
             CollectionType type = typeText switch
             {
                 "rubbish" => CollectionType.Rubbish,
-                "recycle" => CollectionType.Recycling,
+                "recycling" => CollectionType.Recycling,
                 "food scraps" => CollectionType.FoodScraps,
                 _ => 0
             };
