@@ -123,7 +123,7 @@ public class AucklandCollection : BaseCollection
 
         foreach (var n in nextCollectionNodes)
         {
-            var typeText = n.InnerText?.Trim()?.Split("\r\n")[0]?.Replace(":", "")?.ToLower() ?? string.Empty;
+            var typeText = n.InnerText?.Trim()?.Split(["\r\n", "\r", "\n"], StringSplitOptions.None)[0]?.Replace(":", "")?.ToLower() ?? string.Empty;
             CollectionType type = typeText switch
             {
                 "rubbish" => CollectionType.Rubbish,
