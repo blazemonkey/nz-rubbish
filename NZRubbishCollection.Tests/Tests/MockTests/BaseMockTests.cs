@@ -48,7 +48,7 @@ public abstract class BaseMockTests : UnitTests
     /// <param name="httpParameters">An array of mocked parameters for HttpClient</param>
     /// <param name="htmlDocuments">An array of mocked HtmlDocuments</param>
     /// <returns>A concrete implementation of BaseCollection</returns>
-    /// <summary>
+    /// <summary />
     protected BaseCollection GetBaseCollection(MockHttpParameter[] httpParameters, MockHtmlDocument[] htmlDocuments)
     {
         var httpClient = GetMockHttpClientFactory(httpParameters).Object.CreateClient();
