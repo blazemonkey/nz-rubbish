@@ -26,17 +26,17 @@ public class AucklandCollection : BaseCollection
     /// <summary>
     /// Gets the Base URL of the Council website
     /// </summary>
-    protected override string BaseUrl => "https://www.aucklandcouncil.govt.nz/";
+    protected override string BaseUrl => "https://new.aucklandcouncil.govt.nz/";
 
     /// <summary>
     /// Gets the URL that is used to search for a list of matching addresses based on an input
     /// </summary>
-    private string GetIdUrl { get => $"{BaseUrl}_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses"; }
+    private string GetIdUrl => $"{BaseUrl}nextapi/property?query=";
 
     /// <summary>
     /// Gets the URL that will get the collection details based on a StreetID that was returned from GetIdUrl
     /// </summary>
-    private string CollectionUrl { get => $"{BaseUrl}rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an={_streetId}"; }
+    private string CollectionUrl => $"{BaseUrl}en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/{_streetId}.html";
 
     /// <summary>
     /// Id that is returned from the GetIdUrl that is then passed to the CollectionUrl to get the collection details
@@ -87,16 +87,16 @@ public class AucklandCollection : BaseCollection
     /// <returns>The StreetId</returns>
     private async Task<string> GetStreetId(string streetAddress)
     {
-        var message = await HttpClient.PostAsJsonAsync(GetIdUrl, new { SearchText = streetAddress, ResultCount = "1", RateKeyRequired = "false" }, new JsonSerializerOptions() { PropertyNamingPolicy = null }); // must set naming policy to null or it'll turn to camel case which the endpoint doesn't like
+        var message = await HttpClient.GetAsync($"{GetIdUrl}{streetAddress}");
         if (message.IsSuccessStatusCode == false)
             return string.Empty;
 
         var content = await message.Content.ReadAsStreamAsync();
-        var result = await JsonSerializer.DeserializeAsync<GetIdResponse[]>(content, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) ?? new GetIdResponse[] { };
-        if (result.Any() == false)
+        var result = await JsonSerializer.DeserializeAsync<GetIdResponse>(content, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        if (result?.Items.Length != 0 == false)
             return string.Empty;
 
-        var streetId = result.FirstOrDefault()?.ACRateAccountKey ?? string.Empty;
+        var streetId = result?.Items.FirstOrDefault()?.Id ?? string.Empty;
         return streetId;
     }
 
@@ -107,42 +107,54 @@ public class AucklandCollection : BaseCollection
     /// <returns>Full street name</returns>
     private static string GetStreetName(HtmlDocument doc)
     {
-        var streetName = doc.DocumentNode.SelectNodes("//h2").Where(x => x.HasClass("m-b-2")).FirstOrDefault()?.InnerText ?? string.Empty;
-        return streetName;
+        var streetName = doc.DocumentNode.SelectNodes("//h2[@class='']//span[@class='heading']//span").FirstOrDefault()?.InnerText ?? string.Empty;
+        var suburb = doc.DocumentNode.SelectNodes("//h2[@class='']//span[@class='subheading']").FirstOrDefault()?.InnerText ?? string.Empty;
+
+        if (string.IsNullOrEmpty(streetName))
+            return string.Empty;
+
+        return string.IsNullOrEmpty(suburb) ? streetName : $"{streetName}, {suburb}";
     }
 
     private static CollectionDetail[] GetCollectionDates(HtmlDocument doc)
     {
         var dates = new List<CollectionDetail>();
 
-        var nextCollectionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h4[@class='card-title h2' and text()='Household collection']]//h5[@class='collectionDayDate']");
-        var descriptionNodes = doc.DocumentNode.SelectNodes("//div[@class='card-header'][h4[@class='card-title h2' and text()='Household collection']]/following-sibling::div/div/h6");
+        var nextCollectionNodes = doc.DocumentNode.SelectNodes("//span[text() = 'Household collection']/ancestor::div[@class='card-heading']//following-sibling::div//p[@class='mb-0 lead']");
+        var descriptionNodes = doc.DocumentNode.SelectNodes("//span[text() = 'Household collection']/ancestor::div[@class='card-body']//following-sibling::div[@class='card-footer']//span[@class='acpl-icon-with-attribute left']");
 
         if (nextCollectionNodes == null || descriptionNodes == null)
             return dates.ToArray();
 
         foreach (var n in nextCollectionNodes)
         {
-            var typeText = n.InnerText?.Trim()?.Split(["\r\n", "\r", "\n"], StringSplitOptions.None)[0]?.Replace(":", "")?.ToLower() ?? string.Empty;
-            CollectionType type = typeText switch
+            var splitText = n.InnerText?.Trim().Split([":"], StringSplitOptions.None) ?? [];
+            if (splitText.Length == 0)
+                continue;
+            
+            var typeText = splitText[0].Replace(":", "").Trim().ToLower();
+            CollectionType type = typeText.ToLower() switch
             {
-                "rubbish" => CollectionType.Rubbish,
-                "recycling" => CollectionType.Recycling,
-                "food scraps" => CollectionType.FoodScraps,
+                var t when t.Contains("rubbish") => CollectionType.Rubbish,
+                var t when t.Contains("recycling") => CollectionType.Recycling,
+                var t when t.Contains("food") || t.Contains("scrap") => CollectionType.FoodScraps,
                 _ => 0
             };
-
+            
             if (type == 0)
                 continue;
 
-            var dateText = n.SelectSingleNode("strong")?.InnerText?.Trim() ?? string.Empty;
+            var dateText = splitText[1].Trim();
+            if (string.IsNullOrEmpty(dateText))
+                continue;
+            
             var date = ParseCollectionDate(dateText, DateTime.Now.Year);
 
             var description = "";
             var descriptionNode = descriptionNodes.FirstOrDefault(x => x?.InnerText?.ToLower()?.Trim() == typeText);
             if (descriptionNode != null)
             {
-                description = descriptionNode.NextSibling.NextSibling.InnerText;
+                description = descriptionNode.NextSibling.NextSibling.NextSibling.InnerText;
                 // the description should start with Collection Day:
                 // if it doesn't, try next sibling one more time
                 if (description.StartsWith("Collection day") == false)
@@ -173,27 +185,24 @@ public class AucklandCollection : BaseCollection
     /// <returns>DateTime of the collection</returns>
     private static DateTime ParseCollectionDate(string date, int year)
     {
-        var fullDate = $"{date} {year}";
-        var success = DateTime.TryParseExact(fullDate, "dddd d MMMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parseDate);
-        if (success == false)
-            return ParseCollectionDate(date, year + 1);
-
-        return parseDate;
+        while (true)
+        {
+            var fullDate = $"{date} {year}";
+            var success = DateTime.TryParseExact(fullDate, "dddd, d MMMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parseDate);
+            if (success) return parseDate;
+            year += 1;
+        }
     }
+
+    /// <summary>
+    /// Root response for getting StreetId
+    /// </summary>
+    private record GetIdResponse(StreetItem[] Items);
 
     /// <summary>
     /// Item matched from getting StreetId
     /// </summary>
-    class GetIdResponse
-    {
-        /// <summary>
-        /// Gets or sets the Id that will be used to pass to CollectionUrl
-        /// </summary>
-        public string? ACRateAccountKey { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Address that has been matched
-        /// </summary>
-        public string? Address { get; set; }
-    }
+    /// <param name="Id">Id of the property</param>
+    /// <param name="Address">Address of the property</param>
+    private record StreetItem(string? Id, string? Address);
 }

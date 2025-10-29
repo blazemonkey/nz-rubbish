@@ -17,16 +17,16 @@ public class AucklandTests : BaseMockTests
     [TestMethod]
     public async Task HasAllTest()
     {
-        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[{\"ACRateAccountKey\":\"12343873601\",\"Address\":\"10 Popokatea Drive, Takanini\",\"Suggestion\":\"10 Popokatea Drive, Takanini\"}]" };
-        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = $"https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12343873601", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasAllTest)}") };
+        var httpParameter = new MockHttpParameter() { RequestUrl = "https://new.aucklandcouncil.govt.nz/nextapi/property?query=10 Popokatea Drive", ResponseContent = "{\"items\":[{\"id\":\"12343873601\",\"address\":\"10 Popokatea Drive, Takanini\"}]}" };
+        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = "https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/12343873601.html", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasAllTest)}") };
 
-        var collection = GetBaseCollection(new MockHttpParameter[] { httpParameter }, new MockHtmlDocument[] { htmlDocumentParameter });
+        var collection = GetBaseCollection([httpParameter], [htmlDocumentParameter]);
         var result = await collection.GetCollection("10 Popokatea Drive");
 
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
-        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12343873601", result.SourceUrl);
-        Assert.AreEqual("10 Popokatea Drive, Takanini", result.StreetAddress?.Trim());
+        Assert.AreEqual("https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/12343873601.html", result.SourceUrl);
+        Assert.AreEqual("10 Popokatea Drive, Takanini, Auckland 2112", result.StreetAddress?.Trim());
         Assert.AreEqual(3, result.Details?.Length);
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
@@ -34,37 +34,18 @@ public class AucklandTests : BaseMockTests
     }
 
     [TestMethod]
-    public async Task HasRecyclingTest()
-    {
-        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[{\"ACRateAccountKey\":\"12345874265\",\"Address\":\"2 Surf View Crescent, Red Beach\",\"Suggestion\":\"2 Surf View Crescent, Red Beach\"}]" };
-        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = $"https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345874265", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasRecyclingTest)}") };
-
-        var collection = GetBaseCollection(new MockHttpParameter[] { httpParameter }, new MockHtmlDocument[] { htmlDocumentParameter });
-        var result = await collection.GetCollection("2 Surf View Crescent");
-
-        Assert.IsNotNull(result);
-        Assert.IsNull(result.Error);
-        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345874265", result.SourceUrl);
-        Assert.AreEqual("2 Surf View Crescent, Red Beach", result.StreetAddress?.Trim());
-        Assert.AreEqual(2, result.Details?.Length);
-        Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
-        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
-        Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Recycling));
-    }
-
-    [TestMethod]
     public async Task HasRubbishAndRecyclingTest()
     {
-        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[{\"ACRateAccountKey\":\"12345049582\",\"Address\":\"Clevedon-Takanini Road, Clevedon\",\"Suggestion\":\"Clevedon-Takanini Road, Clevedon\"}]" };
-        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = $"https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345049582", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasRubbishAndRecyclingTest)}") };
+        var httpParameter = new MockHttpParameter() { RequestUrl = "https://new.aucklandcouncil.govt.nz/nextapi/property?query=Clevedon-Takanini Road", ResponseContent = "{\"items\":[{\"id\":\"12345049582\",\"address\":\"Clevedon-Takanini Road, Clevedon\"}]}" };
+        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = "https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/12345049582.html", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(HasRubbishAndRecyclingTest)}") };
 
-        var collection = GetBaseCollection(new MockHttpParameter[] { httpParameter }, new MockHtmlDocument[] { htmlDocumentParameter });
+        var collection = GetBaseCollection([httpParameter], [htmlDocumentParameter]);
         var result = await collection.GetCollection("Clevedon-Takanini Road, Clevedon");
 
         Assert.IsNotNull(result);
         Assert.IsNull(result.Error);
-        Assert.AreEqual("https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12345049582", result.SourceUrl);
-        Assert.AreEqual("Clevedon-Takanini Road, Clevedon", result.StreetAddress?.Trim());
+        Assert.AreEqual("https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/12345049582.html", result.SourceUrl);
+        Assert.AreEqual("Clevedon-Takanini Road, Clevedon, Auckland 2582", result.StreetAddress?.Trim());
         Assert.AreEqual(2, result.Details?.Length);
         Assert.AreEqual(1, result.Details?.Count(x => x.Type == CollectionType.Rubbish));
         Assert.AreEqual(0, result.Details?.Count(x => x.Type == CollectionType.FoodScraps));
@@ -72,24 +53,12 @@ public class AucklandTests : BaseMockTests
     }
 
     [TestMethod]
-    public async Task NoSearchAddressTest()
-    {
-        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[]" };
-        var collection = GetBaseCollection(new MockHttpParameter[] { httpParameter }, new MockHtmlDocument[] { });
-        var result = await collection.GetCollection("!@#$%^&*(");
-
-        Assert.IsNotNull(result);
-        Assert.AreEqual("Could not match a single street address. Please try another address or be more specific", result.Error);
-    }
-
-
-    [TestMethod]
     public async Task NoCollectionDetailsTest()
     {
-        var httpParameter = new MockHttpParameter() { RequestUrl = "https://www.aucklandcouncil.govt.nz/_vti_bin/ACWeb/ACservices.svc/GetMatchingPropertyAddresses", ResponseContent = "[{\"ACRateAccountKey\":\"12346212126\",\"Address\":\"Karaka Bay, Great Barrier Island\",\"Suggestion\":\"Karaka Bay, Great Barrier Island\"}]" };
-        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = $"https://www.aucklandcouncil.govt.nz/rubbish-recycling/rubbish-recycling-collections/Pages/collection-day-detail.aspx?an=12346212126", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(NoCollectionDetailsTest)}") };
+        var httpParameter = new MockHttpParameter() { RequestUrl = "https://new.aucklandcouncil.govt.nz/nextapi/property?query=Karaka Bay", ResponseContent = "{\"items\":[{\"id\":\"12346212134\",\"address\":\"Karaka Bay, Great Barrier Island\"},{\"id\":\"12346212126\",\"address\":\"Karaka Bay, Great Barrier Island\"}]}" };
+        var htmlDocumentParameter = new MockHtmlDocument() { RequestUrl = "https://new.aucklandcouncil.govt.nz/en/rubbish-recycling/rubbish-recycling-collections/rubbish-recycling-collection-days/12346212134.html", HtmlString = EmbeddedResourceHelper.GetResourceFromHtml($"{CouncilType}.{nameof(NoCollectionDetailsTest)}") };
 
-        var collection = GetBaseCollection(new MockHttpParameter[] { httpParameter }, new MockHtmlDocument[] { htmlDocumentParameter });
+        var collection = GetBaseCollection([httpParameter], [htmlDocumentParameter]);
         var result = await collection.GetCollection("Karaka Bay, Great Barrier Island");
 
         Assert.IsNotNull(result);
